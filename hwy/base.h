@@ -1045,7 +1045,12 @@ HWY_API HWY_BITCASTSCALAR_CONSTEXPR To BitCastScalar(const From& val) {
 #ifndef HWY_RVV_HAVE_F16_VEC  // allow override
 // RVV with f16 extension supports _Float16 and f16 vector ops. If set, implies
 // HWY_HAVE_FLOAT16.
-#if HWY_ARCH_RISCV && defined(__riscv_zvfh) && HWY_COMPILER_CLANG >= 1600
+// GCC 15 also supports the Zvfh intrinsics (_Float16 + f16 vector ops) and
+// generates the same hardware vfncvt/vfwcvt/vfadd instructions as Clang 16+.
+// Verified on SpacemiT X100 (GCC 15.2, -march=..._zvfh): hardware f16 roundtrip
+// is bit-exact and ~3.5x faster than the emulated path.
+#if HWY_ARCH_RISCV && defined(__riscv_zvfh) && \
+    (HWY_COMPILER_CLANG >= 1600 || HWY_COMPILER_GCC_ACTUAL >= 1500)
 #define HWY_RVV_HAVE_F16_VEC 1
 #else
 #define HWY_RVV_HAVE_F16_VEC 0
